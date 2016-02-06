@@ -2,12 +2,10 @@
 //
 
 #include "stdafx.h"
-
 #include "Classes.h"
 
-
-int _tmain(int argc, _TCHAR* argv[])
+int main()
 {
-	return 0;
+    return 0;
 }
 
