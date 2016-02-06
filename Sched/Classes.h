@@ -1,5 +1,7 @@
 #pragma once
 
+/* Branching test */
+
 #include "stdafx.h"
 
 enum Day
