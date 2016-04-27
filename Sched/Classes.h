@@ -16,8 +16,8 @@ class CTime
     public:
         CTime( int hour, int min )
         {
-            assert( hour >= 7 );
-            assert( hour <= 18 );
+            assert( hour >= 6 );
+            assert( hour <= 23 );
             assert( min >= 0 );
             assert( min < 60 );
             assert( min % 15 == 0 );
@@ -113,13 +113,13 @@ class CAreaMgr
     public:
         CAreaMgr() {};
 
-        void AddArea( CArea* pArea )
+        void AddArea( const CArea& pArea )
         {
             m_areas.push_back( pArea );
         };
 
     private:
-        std::list<CArea*> m_areas;
+        std::list<CArea> m_areas;
 };
 
 
