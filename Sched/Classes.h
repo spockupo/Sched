@@ -1,6 +1,6 @@
 #pragma once
 
-/* Branching test */
+/* Branching test 2 */
 
 #include "stdafx.h"
 
