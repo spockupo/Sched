@@ -1,6 +1,6 @@
 #pragma once
 
-/* Branching test */
+/* Branching test 2 */
 
 #include "stdafx.h"
 
@@ -16,9 +16,9 @@ class CTime
     public:
         CTime( int hour, int min )
         {
-            assert( hour >= 7 );
-            assert( hour <= 18 );
-            assert( min > 0 );
+            assert( hour >= 6 );
+            assert( hour <= 23 );
+            assert( min >= 0 );
             assert( min < 60 );
             assert( min % 15 == 0 );
 
@@ -26,23 +26,44 @@ class CTime
             m_min = min;
         };
 
-    private:
+        void AddDivision( const int& hourlyDivision )
+        {
+            assert( hourlyDivision >= 0 && hourlyDivision <= 4 );
+
+            int minutes( 60 / hourlyDivision );
+            m_min += minutes;
+            if ( m_min >= 60 )
+            {
+                ++m_hour;
+                m_min -= 60;
+            }
+        }
+
         int m_hour;
         int m_min;
 };
 
+
 class CVolunteer;
 
+
+// A CShift represents a shift during which a single volunteer works a single period; e.g. a four-hour shift on Saturday.
 class CShift 
 {
     public:
-        CShift( enum Day day, const CTime &time )
-          : m_day(day), m_time(time)
+        CShift( enum Day day, const CTime &startTime, const CTime &stopTime )
+            : m_day( day ), m_startTime( startTime ), m_stopTime( stopTime ), m_pVolunteer( nullptr )
         {};
+
+        bool operator<( const CShift& lhs ) const
+        {
+            return true;
+        };
 
     private:
         enum Day m_day;
-        CTime m_time;
+        CTime m_startTime;
+        CTime m_stopTime;
         CVolunteer *m_pVolunteer;   // Shift not scheduled if this is nullptr
 };
 
@@ -69,15 +90,36 @@ enum Area
 };
 
 
+typedef std::list<CShift> SHIFTS;
+typedef std::vector<SHIFTS> POSITIONS;
+
+
 class CArea
 {
     public:
-        CArea();
+        CArea( const Area& area, const POSITIONS& positions, const Rating& rating )
+            : m_area( area ), m_positions( positions ), m_rating( rating )
+        {};
 
     private:
         Area m_area;
-        std::list<CShift*> m_shifts;
+        POSITIONS m_positions;  // An area has many positions to fill; e.g. 10 autograph tables means 10 'positions' need to be filled
         Rating m_rating;
+};
+
+
+class CAreaMgr
+{
+    public:
+        CAreaMgr() {};
+
+        void AddArea( const CArea& pArea )
+        {
+            m_areas.push_back( pArea );
+        };
+
+    private:
+        std::list<CArea> m_areas;
 };
 
 
@@ -114,6 +156,7 @@ class CVolunteer
     private:
         CPerson m_person;
         std::list<CShift*> m_availability;
+        std::vector<CArea*> m_preferredAreas;
 };
 
 
