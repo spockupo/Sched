@@ -39,6 +39,34 @@ class CTime
             }
         }
 
+        bool operator==( const CTime& time ) const
+        {
+            return m_hour == time.m_hour && m_min == time.m_min;
+        }
+
+        bool operator<( const CTime& time ) const
+        {
+            if ( m_hour < time.m_hour )
+                return true;
+            else if ( m_hour == time.m_hour )
+            {
+                if ( m_min < time.m_min )
+                    return true;
+            }
+
+            return false;
+        }
+
+        bool operator>( const CTime& time ) const
+        {
+            if ( *this < time )
+                return false;
+            else if ( *this == time )
+                return false;
+            else 
+                return true;
+        }
+
         int m_hour;
         int m_min;
 };
@@ -58,6 +86,37 @@ class CShift
         bool operator<( const CShift& lhs ) const
         {
             return true;
+        };
+
+        bool operator==( const CShift& shift ) const
+        {
+            if ( m_startTime == shift.m_startTime &&
+                 m_stopTime == shift.m_stopTime )
+                return true;
+            else
+                return false;
+        }
+
+        bool IsAssigned() const
+        {
+            return m_pVolunteer != nullptr;
+        };
+
+        // Does this shift match/fit into given shift?
+        bool IsMatch( const CShift& shift )
+        {
+            /*
+            if ( m_day == shift.m_day )
+            {
+                if ( m_startTime < shift.m_startTime
+            }
+            */
+            return false;
+        };
+
+        void Assign( CVolunteer *vol )
+        {
+            m_pVolunteer = vol;
         };
 
     private:
@@ -101,11 +160,26 @@ class CArea
             : m_area( area ), m_positions( positions ), m_rating( rating )
         {};
 
+        Rating GetRating() const {
+            return m_rating;
+        };
+
+        Area GetArea() const {
+            return m_area;
+        };
+
+        POSITIONS& GetPositions() {
+            return m_positions;
+        };
+
     private:
         Area m_area;
         POSITIONS m_positions;  // An area has many positions to fill; e.g. 10 autograph tables means 10 'positions' need to be filled
         Rating m_rating;
 };
+
+
+typedef std::vector<Area> PREFERRED_AREAS;
 
 
 class CAreaMgr
@@ -134,7 +208,17 @@ enum Age
 class CPerson
 {
     public:
-        CPerson();
+        CPerson( const std::wstring& firstname, const std::wstring& lastname, const Age& age, const Rating& rating = Neutral )
+            : m_FirstName( firstname ), m_LastName( lastname ), m_age( age ), m_rating( rating )
+        {};
+
+        bool IsRatingMatch( const Rating& rating )
+        {
+            if ( m_rating >= rating )
+                return true;
+            else
+                return false;
+        };
 
     private:
         std::wstring m_ID;
@@ -151,12 +235,91 @@ class CPerson
 class CVolunteer
 {
     public:
-        CVolunteer();
+        CVolunteer( const CPerson& person, const SHIFTS& availability, const PREFERRED_AREAS& areas )
+            : m_person( person ), m_availability( availability ), m_preferredAreas( areas ), m_matches( 0 )
+        {};
+
+        bool IsRatingMatch( const Rating& rating )
+        {
+            return m_person.IsRatingMatch( rating );
+        };
+
+        bool IsPreferredArea( const Area& area )
+        {
+            // This doesn't care about preferred #1 or #2 areas - just finds a preferred area - TBD
+            return std::find( m_preferredAreas.begin(), m_preferredAreas.end(), area ) != m_preferredAreas.end();
+        };
+
+        bool IsAvailable( const CShift& shift ) const
+        {
+            bool bFound( false );
+            for ( auto myShift : m_availability )
+            {
+                if ( myShift == shift && ! myShift.IsAssigned() )
+                {
+                    bFound = true;
+                    break;
+                }
+            }
+            return bFound;
+        };
+
+        void Assign( CShift& shift )
+        {
+            assert( ! shift.IsAssigned() );
+
+            bool bFound( false );
+            for ( auto myShift : m_availability )
+            {
+                if ( myShift == shift && ! myShift.IsAssigned() )
+                {
+                    bFound = true;
+                    myShift.Assign( this );
+                    shift.Assign( this );
+                    break;
+                }
+            }
+
+            assert( bFound );
+        };
+
+        void ClearMatches()
+        {
+            m_matches = 0;
+        };
+
+        void IncrementMatch()
+        {
+            ++m_matches;
+        };
+
+        int Matches() const {
+            return m_matches;
+        };
 
     private:
+        int m_matches;
         CPerson m_person;
-        std::list<CShift*> m_availability;
-        std::vector<CArea*> m_preferredAreas;
+        SHIFTS m_availability;
+        PREFERRED_AREAS m_preferredAreas;
+};
+
+
+class CVolMgr
+{
+    public:
+        CVolMgr() {};
+
+        void AddVol( const CVolunteer& vol )
+        {
+            CVolunteer *pVol = new CVolunteer( vol );
+            m_vols.push_back( pVol );
+        };
+
+        void GetVol( CArea& area );
+
+    private:
+        std::list<CVolunteer*> m_vols;
 };
 
 
